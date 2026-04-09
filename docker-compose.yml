@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  # ── Main Streamlit app ──────────────────────────────────────────────────────
+  app:
+    build: .
+    container_name: docusummarize-app
+    ports:
+      - "8501:8501"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+    env_file:
+      - .env
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    volumes:
+      - ./:/app          # hot-reload in development
+
+  # ── Ollama (local Llama server) ─────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: docusummarize-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    # GPU support (uncomment if you have an NVIDIA GPU)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  ollama-data:
